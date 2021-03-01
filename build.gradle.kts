@@ -12,7 +12,9 @@ repositories {
     mavenCentral()
 }
 
-
+dependencies {
+    implementation("com.xenomachina:kotlin-argparser:2.0.7")
+}
 
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "11"
