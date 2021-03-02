@@ -22,4 +22,9 @@ class ProgramArgs(parser: ArgParser) {
     ) {
         toString()
     }.default("libx265")
+
+    val acceptWarnings by parser.flagging(
+        "--accept-warnings",
+        help = "Automatically accepts all warnings"
+    )
 }

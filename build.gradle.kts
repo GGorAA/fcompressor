@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "me.ggoraa"
-version = "1.0-SNAPSHOT"
+version = "1.1"
 
 repositories {
     mavenCentral()
@@ -23,12 +23,11 @@ tasks {
 dependencies {
     implementation("com.xenomachina:kotlin-argparser:2.0.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
-    implementation("net.bramp.ffmpeg:ffmpeg:0.6.2")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.7")
     implementation("org.apache.logging.log4j:log4j-core:2.7")
 }
 
-tasks.withType<KotlinCompile>() {
+tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }
 
