@@ -7,8 +7,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import me.ggoraa.fcompressor.args.ProgramArgs
-import me.ggoraa.fcompressor.ffmpeg.runFfmpeg
-import me.ggoraa.fcompressor.tools.runFfmpegCommand
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -80,12 +78,25 @@ suspend fun main(args: Array<String>) = coroutineScope {
     println("Starting the compression process...")
     for (i in inputFilesFiltered.indices) {
         launch(Dispatchers.IO) {
-            runFfmpeg(
-                input = "$ffmpegInputDir/${inputFilesFiltered[i]}",
-                output = "$ffmpegOutputDir/${inputFilesFiltered[i]}",
-                codec = ffmpegCodec,
-                crf = ffmpegCrf.toString()
+//            runFfmpeg(
+//                input = "$ffmpegInputDir/${inputFilesFiltered[i]}",
+//                output = "$ffmpegOutputDir/${inputFilesFiltered[i]}",
+//                codec = ffmpegCodec,
+//                crf = ffmpegCrf.toString()
+//            )
+            val process = ProcessBuilder(
+                "ffmpeg",
+                "-i",
+                "$ffmpegInputDir/${inputFilesFiltered[i]}",
+                "-vcodec",
+                ffmpegCodec,
+                "-crf",
+                ffmpegCrf.toString(),
+                "-y",
+                "$ffmpegOutputDir/${inputFilesFiltered[i]}"
             )
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start()
         }
     }
 
