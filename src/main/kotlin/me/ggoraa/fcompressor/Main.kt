@@ -7,9 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import me.ggoraa.fcompressor.args.ProgramArgs
-import me.ggoraa.fcompressor.tools.runCommand
-import net.bramp.ffmpeg.FFmpeg
-import net.bramp.ffmpeg.FFprobe
+import me.ggoraa.fcompressor.ffmpeg.runFfmpeg
+import me.ggoraa.fcompressor.tools.runFfmpegCommand
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -26,9 +25,6 @@ suspend fun main(args: Array<String>) = coroutineScope {
     )
 
     println("A convenient tool for compressing a lot of videos at the same time with no effort\n\n")
-
-    val ffmpeg = FFmpeg("ffmpeg")
-    val ffprobe = FFprobe("ffprobe")
 
     val inputFilesFiltered: MutableList<String>
     val ffmpegCodec: String
@@ -82,11 +78,16 @@ suspend fun main(args: Array<String>) = coroutineScope {
         ffmpegOutputDir = outputDir
     }
     println("Starting the compression process...")
-
     for (i in inputFilesFiltered.indices) {
         launch(Dispatchers.IO) {
-            "ffmpeg -i $ffmpegInputDir/${inputFilesFiltered[i]} -vcodec $ffmpegCodec -crf $ffmpegCrf -y $ffmpegOutputDir/${inputFilesFiltered[i]}".runCommand()
+            runFfmpeg(
+                input = "$ffmpegInputDir/${inputFilesFiltered[i]}",
+                output = "$ffmpegOutputDir/${inputFilesFiltered[i]}",
+                codec = ffmpegCodec,
+                crf = ffmpegCrf.toString()
+            )
         }
     }
+
     println("FCompressor is now compressing the videos, the program will automatically exit on finish")
 }
