@@ -2,7 +2,7 @@
 
 ## How it works
 
-FCompressor searches for videofiles(files with an extension of .mp4/.avi/.mkv), and launches independent instances of `ffmpeg` for each video file, so if there was 25 video files, it will launch 25 instances of `ffmpeg`, and the FCompressor will exit. To shut down the compression process, you need to shut down every instance of `ffmpeg`. That's how it works 🤷‍. But later in development FCompressor will stay open while `ffmpeg` does it's thing, and you will be able to shut down every instance of `ffmpeg` by simpy exiting FCompressor.
+FCompressor searches for videofiles(files with an extension of .mp4/.avi/.mkv), and launches independent instances of `ffmpeg` for each video file, so if there was 25 video files, it will launch 25 instances of `ffmpeg`, and then FCompressor will exit. To shut down the compression process, you need to shut down every instance of `ffmpeg`. That's how it works 🤷‍. But later in development FCompressor will stay open while `ffmpeg` does it's thing, and you will be able to shut down every instance of `ffmpeg` by simpy exiting FCompressor.
 
 ## Usage
 Very easy, you just pass the input dir, and the output dir, like this:
