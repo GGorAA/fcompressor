@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "me.ggoraa"
-version = "1.1"
+version = "1.2"
 
 repositories {
     mavenCentral()
@@ -25,6 +25,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.7")
     implementation("org.apache.logging.log4j:log4j-core:2.7")
+    implementation("com.danielflower.apprunner:javasysmon:0.3.5.0")
 }
 
 tasks.withType<KotlinCompile> {
