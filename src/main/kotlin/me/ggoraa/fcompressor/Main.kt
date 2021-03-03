@@ -4,7 +4,9 @@ package me.ggoraa.fcompressor
 
 import com.jezhumble.javasysmon.JavaSysMon
 import com.xenomachina.argparser.ArgParser
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import me.ggoraa.fcompressor.args.ProgramArgs
 import me.ggoraa.fcompressor.tools.fileTail
 import java.io.File
@@ -24,6 +26,7 @@ suspend fun main(args: Array<String>) = coroutineScope {
 
     println("A convenient tool for compressing a lot of videos at the same time with no effort\n\n")
 
+    // All needed variables for ffmpeg
     val inputFilesFiltered: MutableList<String>
     val ffmpegCodec: String
     val ffmpegCrf: Int
@@ -75,6 +78,19 @@ suspend fun main(args: Array<String>) = coroutineScope {
         ffmpegInputDir = inputDir
         ffmpegOutputDir = outputDir
     }
+
+    // Here we check if logs directory exists, if so, delete and create one, if not, just create one
+    println("Checking for logs...")
+    val logsDir = File("${System.getProperty("user.home")}/.fcompressor/logs")
+    if (logsDir.exists()) {
+        println("Logs exist, clearing...")
+        logsDir.deleteRecursively()
+        logsDir.mkdir()
+    } else {
+        println("Creating logs dir...")
+        logsDir.mkdir()
+    }
+
     println("Starting the compression process...")
     val ffmpegProcessPids = mutableListOf<Long>()
     for (i in inputFilesFiltered.indices) {
@@ -102,11 +118,11 @@ suspend fun main(args: Array<String>) = coroutineScope {
     }
     val job = launch {
         val totalProcessedLength = 0
-        Thread.sleep(3000)
+        Thread.sleep(6000) // This thing is for waiting for ffmpeg processes to start, so FCompressor can get their state from the log files
         for (i in inputFilesFiltered.indices) {
             val lastLine = fileTail(File("${System.getProperty("user.home")}/.fcompressor/logs/latest$i.log"))
             val lastLineArray = lastLine?.split("=")?.toTypedArray()
-            println(lastLineArray?.get(0))
+            println(lastLineArray?.get(5))
         }
     }
     job.join()
@@ -115,6 +131,7 @@ suspend fun main(args: Array<String>) = coroutineScope {
 
     val closeChildThread: Thread = object : Thread() {
         override fun run() {
+            println("FCompressor is shutting down...")
             for (i in ffmpegProcessPids) {
                 sysMon.killProcess(i.toInt())
             }
