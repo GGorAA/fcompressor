@@ -117,7 +117,6 @@ suspend fun main(args: Array<String>) = coroutineScope {
         }
     }
     val job = launch {
-        val totalProcessedLength = 0
         Thread.sleep(6000) // This thing is for waiting for ffmpeg processes to start, so FCompressor can get their state from the log files
         for (i in inputFilesFiltered.indices) {
             val lastLine = fileTail(File("${System.getProperty("user.home")}/.fcompressor/logs/latest$i.log"))
