@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "me.ggoraa"
-version = "1.2"
+version = "2.0"
 
 repositories {
     mavenCentral()
