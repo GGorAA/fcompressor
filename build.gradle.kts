@@ -12,6 +12,8 @@ version = "1.2"
 
 repositories {
     mavenCentral()
+    maven("https://jitpack.io")
+
 }
 
 tasks {
@@ -26,6 +28,9 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.7")
     implementation("org.apache.logging.log4j:log4j-core:2.7")
     implementation("com.danielflower.apprunner:javasysmon:0.3.5.0")
+    implementation("me.tongfei:progressbar:0.9.0")
+    implementation("dev.reimer:progressbar-ktx:0.1.0")
+    implementation("commons-io:commons-io:2.8.0")
 }
 
 tasks.withType<KotlinCompile> {
