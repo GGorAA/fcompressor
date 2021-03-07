@@ -1,22 +1,21 @@
-@file:Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-
 package me.ggoraa.fcompressor
 
 import com.jezhumble.javasysmon.JavaSysMon
 import com.xenomachina.argparser.ArgParser
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import me.ggoraa.fcompressor.args.ProgramArgs
-import me.ggoraa.fcompressor.tools.fileTail
+import me.ggoraa.fcompressor.tools.clearScreen
+import me.ggoraa.fcompressor.tools.getProcessedVideoLength
+import me.tongfei.progressbar.ProgressBar
+import org.apache.commons.io.IOUtils
 import java.io.File
 import kotlin.system.exitProcess
 
-
 suspend fun main(args: Array<String>) = coroutineScope {
     // Splash
+    clearScreen()
     println(
-            "    ____________                                                    \n" +
+        "    ____________                                                    \n" +
                 "   / ____/ ____/___  ____ ___  ____  ________  ______________  _____\n" +
                 "  / /_  / /   / __ \\/ __ `__ \\/ __ \\/ ___/ _ \\/ ___/ ___/ __ \\/ ___/\n" +
                 " / __/ / /___/ /_/ / / / / / / /_/ / /  /  __(__  |__  ) /_/ / /    \n" +
@@ -33,6 +32,10 @@ suspend fun main(args: Array<String>) = coroutineScope {
     val ffmpegInputDir: String
     val ffmpegOutputDir: String
 
+    // And some variables for progressbar calculation
+    var videoLengthSum: Long = 0
+    var videoLengthProcessed: Long = 0
+
     ArgParser(args).parseInto(::ProgramArgs).run {
         if (acceptWarnings) {
             println("You accepted all warnings using a flag. I am NOT responsible if something goes wrong.")
@@ -45,7 +48,7 @@ suspend fun main(args: Array<String>) = coroutineScope {
                 println("Okay, exiting...")
                 exitProcess(0)
             } else {
-                println("Exiting...")
+                println(" Exiting...")
                 exitProcess(0)
             }
         }
@@ -95,8 +98,6 @@ suspend fun main(args: Array<String>) = coroutineScope {
     val ffmpegProcessPids = mutableListOf<Long>()
     for (i in inputFilesFiltered.indices) {
         launch(Dispatchers.IO) {
-            println("Creating ffmpeg process...")
-            println("Process count: $i")
             val logFile = File("${System.getProperty("user.home")}/.fcompressor/logs/latest$i.log")
             val process = ProcessBuilder(
                 "ffmpeg",
@@ -112,21 +113,32 @@ suspend fun main(args: Array<String>) = coroutineScope {
                 .redirectOutput(logFile)
                 .redirectError(logFile)
                 .start()
-            println("Saving ffmpeg process PID...")
             ffmpegProcessPids.add(process.pid())
         }
     }
-    val job = launch {
-        Thread.sleep(6000) // This thing is for waiting for ffmpeg processes to start, so FCompressor can get their state from the log files
-        for (i in inputFilesFiltered.indices) {
-            val lastLine = fileTail(File("${System.getProperty("user.home")}/.fcompressor/logs/latest$i.log"))
-            val lastLineArray = lastLine?.split("=")?.toTypedArray()
-            println(lastLineArray?.get(5))
-        }
-    }
-    job.join()
+    // Here we find out the total length of all videos
+    println("Getting complete video length...")
+    for (i in inputFilesFiltered.indices) {
+//        val process = Runtime.getRuntime()
+//            .exec("ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $ffmpegInputDir/${inputFilesFiltered[i]}\n")
+//        println("Executed ffprobe")
+//        println(BufferedReader(InputStreamReader(process.inputStream)).readLine())
+//        val output = BufferedReader(InputStreamReader(process.inputStream)).readLine().toString().toFloat()
+//            .toLong() // All this conversion mess is needed, or it wont work. Basically, first it converts to a string, so we can work with it, then to Float, cuz it will throw a exception if I do it with Int, and then conversion to Int
+//        videoLengthSum += output
 
-    val sysMon = JavaSysMon() // This thing is used for manipulating system processes, and is used to shut down every ffmpeg process when FCompressor shuts down.
+        val process = ProcessBuilder("ffprobe", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", "$ffmpegInputDir/${inputFilesFiltered[i]}")
+        val output = IOUtils.toString(process.start().inputStream, "UTF-8")
+
+        val result = output.toString().toFloat().toLong()
+        videoLengthSum += result
+        println(result)
+        println("Done")
+    }
+
+
+    val sysMon =
+        JavaSysMon() // This thing is used for manipulating system processes, and is used to shut down every ffmpeg process when FCompressor shuts down.
 
     val closeChildThread: Thread = object : Thread() {
         override fun run() {
@@ -140,4 +152,14 @@ suspend fun main(args: Array<String>) = coroutineScope {
     Runtime.getRuntime().addShutdownHook(closeChildThread)
 
     println("FCompressor is now compressing the videos, the program will automatically exit on finish")
+
+    println("videoLengthSum: $videoLengthSum")
+    println("videoLengthProcessed: $videoLengthProcessed")
+    ProgressBar("Compressing...", videoLengthSum).use { progressbar ->  // name, initial max
+        while (videoLengthProcessed != videoLengthSum) {
+            progressbar.maxHint(videoLengthSum)
+            videoLengthProcessed = getProcessedVideoLength(inputFilesFiltered.size - 1)
+            progressbar.stepTo(videoLengthProcessed)
+        }
+    }
 }
