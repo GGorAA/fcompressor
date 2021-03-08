@@ -39,7 +39,7 @@ The name is FCompressor, which is translated to Folder Compressor. Compressor of
 ## Requirements
 Installed `ffmpeg`, `ffprobe`, and JRE 11, that's all. That's the only thing you'll need to start FCompressor.
 
-If you don't have `ffmpeg` and `ffprobe`, install it using this command:
+If you don't have `ffmpeg` and `ffprobe`, and you are on a Mac, install it using this command:
 ```bash
 brew install ffmpeg
 ```
