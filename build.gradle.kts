@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     kotlin("jvm") version "1.4.30"
@@ -8,7 +7,7 @@ plugins {
 }
 
 group = "me.ggoraa"
-version = "2.0"
+version = "2.0.1"
 
 repositories {
     mavenCentral()
