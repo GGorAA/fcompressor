@@ -34,6 +34,7 @@ suspend fun main(args: Array<String>) = coroutineScope {
 
     // And some variables for progressbar calculation
     var videoLengthSum: Long = 0
+    var videoLengthList = mutableListOf<Long>()
     var videoLengthProcessed: Long = 0
 
     ArgParser(args).parseInto(::ProgramArgs).run {
@@ -41,15 +42,18 @@ suspend fun main(args: Array<String>) = coroutineScope {
             println("You accepted all warnings using a flag. I am NOT responsible if something goes wrong.")
         } else {
             println("All files in the output directory with the same name as in input wil be OVERRIDDEN. Are you sure to continue? (yes|no)")
-            val consent = readLine()!!
-            if (consent == "yes") {
-                println("Starting...")
-            } else if (consent == "no") {
-                println("Okay, exiting...")
-                exitProcess(0)
-            } else {
-                println(" Exiting...")
-                exitProcess(0)
+            when (readLine()!!) {
+                "yes" -> {
+                    println("Starting...")
+                }
+                "no" -> {
+                    println("Okay, exiting...")
+                    exitProcess(0)
+                }
+                else -> {
+                    println(" Exiting...")
+                    exitProcess(0)
+                }
             }
         }
         println("Input: $inputDir")
@@ -94,6 +98,19 @@ suspend fun main(args: Array<String>) = coroutineScope {
         logsDir.mkdir()
     }
 
+    // Here we find out the total length of all videos
+    println("Getting complete video length...")
+    for (i in inputFilesFiltered.indices) {
+        val process = ProcessBuilder("ffprobe", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", "$ffmpegInputDir/${inputFilesFiltered[i]}")
+        val output = IOUtils.toString(process.start().inputStream, "UTF-8")
+
+        val result = output.toString().toFloat().toLong()
+        videoLengthSum += result
+        videoLengthList.add(result)
+        println(result)
+        println("Done")
+    }
+
     println("Starting the compression process...")
     val ffmpegProcessPids = mutableListOf<Long>()
     for (i in inputFilesFiltered.indices) {
@@ -116,26 +133,6 @@ suspend fun main(args: Array<String>) = coroutineScope {
             ffmpegProcessPids.add(process.pid())
         }
     }
-    // Here we find out the total length of all videos
-    println("Getting complete video length...")
-    for (i in inputFilesFiltered.indices) {
-//        val process = Runtime.getRuntime()
-//            .exec("ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $ffmpegInputDir/${inputFilesFiltered[i]}\n")
-//        println("Executed ffprobe")
-//        println(BufferedReader(InputStreamReader(process.inputStream)).readLine())
-//        val output = BufferedReader(InputStreamReader(process.inputStream)).readLine().toString().toFloat()
-//            .toLong() // All this conversion mess is needed, or it wont work. Basically, first it converts to a string, so we can work with it, then to Float, cuz it will throw a exception if I do it with Int, and then conversion to Int
-//        videoLengthSum += output
-
-        val process = ProcessBuilder("ffprobe", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", "$ffmpegInputDir/${inputFilesFiltered[i]}")
-        val output = IOUtils.toString(process.start().inputStream, "UTF-8")
-
-        val result = output.toString().toFloat().toLong()
-        videoLengthSum += result
-        println(result)
-        println("Done")
-    }
-
 
     val sysMon =
         JavaSysMon() // This thing is used for manipulating system processes, and is used to shut down every ffmpeg process when FCompressor shuts down.
@@ -158,7 +155,7 @@ suspend fun main(args: Array<String>) = coroutineScope {
     ProgressBar("Compressing...", videoLengthSum).use { progressbar ->  // name, initial max
         while (videoLengthProcessed != videoLengthSum) {
             progressbar.maxHint(videoLengthSum)
-            videoLengthProcessed = getProcessedVideoLength(inputFilesFiltered.size - 1)
+            videoLengthProcessed = getProcessedVideoLength(inputFilesFiltered.size - 1, videoLengthList)
             progressbar.stepTo(videoLengthProcessed)
         }
     }
