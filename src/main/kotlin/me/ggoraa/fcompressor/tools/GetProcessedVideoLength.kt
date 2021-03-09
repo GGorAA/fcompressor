@@ -11,7 +11,7 @@ fun getProcessedVideoLength(videoCount: Int, processedList: List<Long>): Long {
         // frame=  128 fps=6.9 q=36.0 size=       0kB time=00:00:04.38 bitrate=   0.1kbits/s speed=0.238x
         try {
             // We will check first if ffmpeg has finished
-            if ("^encoded".toRegex().matches(fileTail!!)) {
+            if ("^encoded".toRegex() matches fileTail!!) {
                 endValue = processedList[i]
             } else { // if not, do usual stuff
                 val fileTailFiltered =
