@@ -4,12 +4,12 @@ import com.xenomachina.argparser.ArgParser
 import com.xenomachina.argparser.default
 
 class ProgramArgs(parser: ArgParser) {
-    val inputDir by parser.positional("INPUT",
+    val inputDir by parser.positional("INPUTDIR",
         help = "Input folder, where all videos FCompressor needs to compress are stored"
     )
 
     val outputDir by parser.positional(
-        "OUTPUT",
+        "OUTPUTDIR",
         help = "Output folder, where compressed videos will be stored"
     )
 
@@ -23,8 +23,8 @@ class ProgramArgs(parser: ArgParser) {
         toString()
     }.default("libx265")
 
-    val acceptWarnings by parser.flagging(
-        "--accept-warnings",
-        help = "Automatically accepts all warnings"
+    val forceOverride by parser.flagging(
+        "-F", "--force",
+        help = "Enables force override of files, if in the output directory will be files with the same name as input files do."
     )
 }

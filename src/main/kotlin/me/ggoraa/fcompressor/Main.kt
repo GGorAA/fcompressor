@@ -31,6 +31,7 @@ suspend fun main(args: Array<String>) = coroutineScope {
     val ffmpegCrf: Int
     val ffmpegInputDir: String
     val ffmpegOutputDir: String
+    val ffmpegForceOverride: Boolean
 
     // And some variables for progressbar calculation
     var videoLengthSum: Long = 0
@@ -38,24 +39,6 @@ suspend fun main(args: Array<String>) = coroutineScope {
     var videoLengthProcessed: Long = 0
 
     ArgParser(args).parseInto(::ProgramArgs).run {
-        if (acceptWarnings) {
-            println("You accepted all warnings using a flag. I am NOT responsible if something goes wrong.")
-        } else {
-            println("All files in the output directory with the same name as in input wil be OVERRIDDEN. Are you sure to continue? (yes|no)")
-            when (readLine()!!) {
-                "yes" -> {
-                    println("Starting...")
-                }
-                "no" -> {
-                    println("Okay, exiting...")
-                    exitProcess(0)
-                }
-                else -> {
-                    println(" Exiting...")
-                    exitProcess(0)
-                }
-            }
-        }
         println("Input: $inputDir")
         println("Output: $outputDir")
         println("Checking input and output directories...")
@@ -84,6 +67,7 @@ suspend fun main(args: Array<String>) = coroutineScope {
         ffmpegCodec = codec
         ffmpegInputDir = inputDir
         ffmpegOutputDir = outputDir
+        ffmpegForceOverride = forceOverride
     }
 
     // Here we check if logs directory exists, if so, delete and create one, if not, just create one
@@ -124,7 +108,7 @@ suspend fun main(args: Array<String>) = coroutineScope {
                 ffmpegCodec,
                 "-crf",
                 ffmpegCrf.toString(),
-                "-y",
+                if(ffmpegForceOverride) "-y" else "-n",
                 "$ffmpegOutputDir/${inputFilesFiltered[i]}"
             )
                 .redirectOutput(logFile)
